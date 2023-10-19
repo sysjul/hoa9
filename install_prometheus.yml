@@ -1,34 +1,37 @@
 #Playbook for installing prometheus
+
 ---
 
 - hosts: all
   become: true
   pre_tasks:
 
-  - name: install updates (CentOS)
-    package:
+  - name: epel-release download
+    yum:
+      name:
+        - epel-release
+    when: ansible_distribution == "CentOS"
+
+  - name: Remote CentOS server Update and Upgrade
+    yum:
+      update_cache: yes
       update_only: yes
-      update_cache: yes
     when: ansible_distribution == "CentOS"
 
-  - name: install wget (CentOS)
-    package:
-      name: wget
-      state: latest
-    when: ansible_distribution == "CentOS"
-
-  - name: install updates (Ubuntu)
+  - name: Ubuntu server Update and Upgrade
     apt:
-      upgrade: dist
       update_cache: yes
+      upgrade: dist
     when: ansible_distribution == "Ubuntu"
 
 - hosts: ubuntu_prometheus
   become: true
   roles:
-    - ubuntu_prometheus
+    - role: ubuntu_prometheus
+      source: https://github.com/prometheus/prometheus/releases/download/v2.39.1/prometheus-2.39.1.linux-amd64.tar.gz
 
 - hosts: centos_prometheus
   become: true
   roles:
-    - centos_prometheus
+    - role: centos_prometheus
+      source: https://github.com/prometheus/prometheus/releases/download/v2.39.1/prometheus-2.39.1.linux-amd64.tar.gz

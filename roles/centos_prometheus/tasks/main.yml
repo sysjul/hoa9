@@ -1,49 +1,34 @@
 #CentOS servers main.yml
 
-  - name: Prometheus PATH directory
-    file:
-      path: ~/prometheus
-      state: directory
+- name: Making Directory for download files
+  file:
+    path: ~/prometheus
+    state: directory
 
+- name: Download/Extract Prometheus Files
+  unarchive:
+    src: "{{source}}"
+    dest: ~/prometheus
+    remote_src: yes
+    mode: 0777
+    owner: root
+    group: root
 
-  - name: Creating directory for Prometheus files
-    file:
-      path:
-        - /etc/prometheus
-        - /var/lib/prometheus
-      mode: 0777
-      state: directory
+- name: Prometheus executables files added
+  shell: |
+    cd ~/prometheus/prometheus*
+    cp -r . /usr/local/bin/prometheus
 
-  - name: Install Prometheus (CentOS)
-    unarchive:
-      src: https://github.com/prometheus/prometheus/releases/download/v2.8.1/prometheus-2.8.1.linux-amd64.tar.gz
-      dest: ~/prometheus
-      remote_src: yes
-      mode: 0777
-      owner: root
-      group: root
+- name: Prometheus service file copy
+  copy:
+    src: prometheus.service
+    dest: /etc/systemd/system
+    mode: 777
+    owner: root
+    group: root
 
-  - name: Configuring Prometheus
-    shell: |
-      cd ~/prometheus/prometheus*
-      cp -r . /usr/local/bin/prometheus
-
-  - name: Prometheus config file duplicate
-    copy:
-      src: prometheus.service
-      dest: /etc/systemd/system
-      mode: 7777
-      owner: root
-      group: root
-
-  - name: Prometheus Start/Enable Check
-    service:
-      name: prometheus.service
-      state: restarted
-      enabled: true
-
-  - name: httpd Start/Enable Check
-    service:
-      name: httpd
-      state: restarted
-      enabled: true
+- name: Verifying the Prometheus
+  service:
+    name: prometheus
+    state: restarted
+    enabled: true
